@@ -11,8 +11,10 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import base64
+from sklearn.preprocessing import LabelEncoder
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
+import statistics
 
 
 def get_base64_of_bin_file(bin_file):
@@ -39,44 +41,42 @@ def set_png_as_page_bg(png_file):
 set_png_as_page_bg('mainbg.jpg')
 
 
-st.title('Cover Anaysis in  Forest Areas')
-st.sidebar.title('Cover Anaysis in  Forest Areas')
+st.title('Mushroom Dataset Analysis')
+st.sidebar.title('Mushroom Dataset Analysis')
 
 st.markdown(
-    'This application is a Dashboard to analyze the forest-cover in various areas of the forest 🏞️')
+    'This application is used to learn about use of various classifiers on Mushroom dataset')
 st.sidebar.markdown(
-    'This application is a Dashboard to analyze the forest-cover in various areas of the forest 🏞️')
+    'This application is used to learn about use of various classifiers on Mushroom dataset')
 
-DATA_URL = ("25.csv")
+DATA_URL = ("mushrooms.csv")
 
 
 @st.cache(persist=True)
 def load():
     data = pd.read_csv(DATA_URL)
+    data['stalk-root'] = data['stalk-root'].replace({'?': np.NaN})
+    m = statistics.mode(data['stalk-root'])
+    data = data.fillna(value=m)
+    encoder = LabelEncoder()
+    data = data.apply(encoder.fit_transform)
     return data
 
 
 data = load()
 
-st.sidebar.markdown("Number of Each Covertype")
 # select = st.sidebar.selectbox(
 #     'Visualization Type', ['Histogram', 'Pie chart', 'PCA'], key='1')
-
-cover_count = data['Cover_Type'].value_counts()
-# st.write(cover_count)
-cover_count = pd.DataFrame(
-    {'Cover Type': cover_count.index, 'Values': cover_count.values})
-
 
 classifier_name = st.sidebar.selectbox(
     "Select the classifier", ("KNN", "SVM", "Random Forest", "GaussianNB"))
 
 
 def get_dataset(data):
-    X = data.iloc[:, :-1]
-    y = data.iloc[:, -1]
+    X = data.iloc[:, 1:]
+    Y = data.iloc[:, 0]
     #y = y.reshape(len(y),1)
-    return X, y
+    return X, Y
 
 
 X, y = get_dataset(data)
@@ -130,7 +130,7 @@ classifier.fit(X_train, y_train)
 y_pred = classifier.predict(X_test)
 
 # Visualize
-st.markdown("Number of cover of each type")
+# st.markdown("Number of cover of each type")
 # if select == "Histogram":
 #     fig = px.bar(cover_count, x='Cover Type',
 #                  y='Values', color='Values', height=500)
